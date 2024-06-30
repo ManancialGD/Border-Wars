@@ -35,8 +35,10 @@ public class EnemyHealth : MonoBehaviour
         if (isInvulnerable) return;
 
         HP -= damageAmount;
+
         ApplyKnockback(attackPos, knockbackAmount);
-        StartCoroutine(InvulnerabilityCoroutine(.2f));
+    
+        StartCoroutine(InvulnerabilityCoroutine(.4f));
     }
 
     /// <summary>

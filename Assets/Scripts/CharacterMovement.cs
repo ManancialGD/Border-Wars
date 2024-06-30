@@ -31,6 +31,7 @@ public class CharacterMovement : MonoBehaviour
 
         if (lastInputY < 0) CharacterAnim.SetFloat("Y", -1);
         else if (lastInputY > 0) CharacterAnim.SetFloat("Y", 1);
+        else if (lastInputY == 0 && input.x != 0) CharacterAnim.SetFloat("Y", -1);
 
         lastInputY = input.y;
     }
