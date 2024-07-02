@@ -32,8 +32,8 @@ public class SceneManagement : MonoBehaviour
         if (currentScene == "Forest")
         {
             int randomIndex = Random.Range(0, jailSpawnPoints.Length);
-            Debug.Log(randomIndex);
             Vector3 randomPlace = jailSpawnPoints[randomIndex].position;
+            
             Instantiate(jailPrefab, randomPlace, Quaternion.identity);
         }
     }

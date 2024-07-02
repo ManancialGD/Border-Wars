@@ -4,6 +4,8 @@ using UnityEngine;
 
 public class CharacterHP : MonoBehaviour
 {
+    [SerializeField] Animator characterAnim;
+    
     private Rigidbody2D rb;
     [SerializeField] private int maxHealth = 100;
     [SerializeField] private int hp;
@@ -35,8 +37,10 @@ public class CharacterHP : MonoBehaviour
         if (isInvulnerable) return;
 
         HP -= damageAmount;
+        
         ApplyKnockback(attackPos, knockbackAmount);
         StartCoroutine(InvulnerabilityCoroutine(.2f));
+        StartCoroutine(DamageAnimator(.2f));
     }
 
     /// <summary>
@@ -61,6 +65,13 @@ public class CharacterHP : MonoBehaviour
         isInvulnerable = true;
         yield return new WaitForSeconds(invulnerabilityTime);
         isInvulnerable = false;
+    }
+    private IEnumerator DamageAnimator(float changeTime)
+    {
+        characterAnim.SetBool("Damage", true);
+        yield return new WaitForSeconds(changeTime);
+        isInvulnerable = false;
+        characterAnim.SetBool("Damage", false);
     }
 
     private void Die()

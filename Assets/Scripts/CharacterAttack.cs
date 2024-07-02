@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using NaughtyAttributes.Editor;
 using UnityEditor;
 using UnityEngine;
 
@@ -9,22 +10,38 @@ public class CharacterAttack : MonoBehaviour
     [SerializeField] private int attackPower = 20;
     [SerializeField] private Transform weaponPos;
     [SerializeField] private bool inCooldown = false;
-    [SerializeField] private float cooldownTime = 0.2f;
+    [SerializeField] private float cooldownTime = 0.3f;
     [SerializeField] private Animator weaponAnim;
 
     public bool IsAttacking { get; private set; }
     private bool wasAttacking;
+    private bool SecondAttacked;
+    [SerializeField] private bool canSecondAttack;
 
     private void Update()
     {
-        if (Input.GetButtonDown("Attack") && !IsAttacking && !inCooldown)
+        if (Input.GetButtonDown("Attack") && ((!IsAttacking && !inCooldown) || canSecondAttack))
         {
-            RotateWeapon();
-            weaponAnim.SetBool("Attack", true);
+
+            if (canSecondAttack)
+            {
+                canSecondAttack = false;
+                SecondAttacked = true;
+                weaponAnim.SetBool("SecondAttack", true);
+            }
+            else
+            {
+                RotateWeaponToAttack();
+                weaponAnim.SetBool("Attack", true);
+                StartCoroutine(WindowToSecondAttack());
+            }
         }
         else if (!IsAttacking)
         {
             weaponAnim.SetBool("Attack", false);
+            weaponAnim.SetBool("SecondAttack", false);
+            SecondAttacked = false;
+            canSecondAttack = false;
         }
 
         if (IsAttacking)
@@ -51,11 +68,18 @@ public class CharacterAttack : MonoBehaviour
         inCooldown = false;
     }
 
+    IEnumerator WindowToSecondAttack()
+    {
+        yield return new WaitForSeconds(0.35f);
+        canSecondAttack = true;
+        yield return new WaitForSeconds(0.2f);
+        canSecondAttack = false;
+    }
     /// <summary>
     /// This will rotate the weapon to face the mouse cursor position.
     /// It calculates the direction from the character to the mouse position and rotates the weapon accordingly.
     /// </summary>
-    private void RotateWeapon()
+    private void RotateWeaponToAttack()
     {
         Vector3 mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
         Vector3 direction = mousePos - transform.position;

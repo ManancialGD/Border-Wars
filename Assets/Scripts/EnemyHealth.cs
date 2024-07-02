@@ -7,6 +7,7 @@ public class EnemyHealth : MonoBehaviour
     private Rigidbody2D rb;
     [SerializeField] private int maxHealth = 100;
     [SerializeField] private int hp;
+    [SerializeField] public bool IsStunned { get; private set; }
     public int HP
     {
         get { return hp; }
@@ -17,7 +18,6 @@ public class EnemyHealth : MonoBehaviour
         }
     }
 
-    private bool isInvulnerable = false;
 
     private void Start()
     {
@@ -32,12 +32,12 @@ public class EnemyHealth : MonoBehaviour
     /// </summary>
     public void Damage(int damageAmount, Vector3 attackPos, int knockbackAmount = 0)
     {
-        if (isInvulnerable) return;
+        if (IsStunned) return;
 
         HP -= damageAmount;
 
         ApplyKnockback(attackPos, knockbackAmount);
-    
+
         StartCoroutine(InvulnerabilityCoroutine(.4f));
     }
 
@@ -56,13 +56,13 @@ public class EnemyHealth : MonoBehaviour
 
     /// <summary>
     /// This coroutine makes the enemy invulnerable for a specified duration.
-    /// It sets isInvulnerable to true, waits for the invulnerability time to elapse, then sets isInvulnerable to false.
+    /// It sets IsStunned to true, waits for the invulnerability time to elapse, then sets IsStunned to false.
     /// </summary>
     private IEnumerator InvulnerabilityCoroutine(float invulnerabilityTime)
     {
-        isInvulnerable = true;
+        IsStunned = true;
         yield return new WaitForSeconds(invulnerabilityTime);
-        isInvulnerable = false;
+        IsStunned = false;
     }
 
     private void Die()
