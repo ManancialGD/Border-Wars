@@ -1,21 +1,31 @@
-using System;
-using System.Linq;
-using Unity.Mathematics;
+using System.Collections;
 using UnityEngine;
-using UnityEngine.AI;
 
 public class AIController : MonoBehaviour
 {
+    [SerializeField] Animator anim;
     EnemyHealth hp;
+    [SerializeField] Transform weaponRotator;
     Rigidbody2D rb;
     public Transform target; // The target the AI should follow
+    public float distanceToTarget;
     public float directionLength = 2.0f; // Length of the direction lines for visualization
-    public float movementSpeed = 5f; // Movement speed of the AI
+    public float movementSpeed = 55f; // Movement speed of the AI
+    [SerializeField] private float persueMovementSpeed;
+    [SerializeField] private float attackMovementSpeed;
+    [SerializeField] private float runMovementSpeed;
     public LayerMask wallLayer; // Layer mask for walls
+    public LayerMask playerLayer;
     Vector2[] directions;
     float[] desirability;
     float[] undesirability;
+    [SerializeField] Transform weaponPos;
 
+    public bool IsAttacking { get; private set; }
+
+    public enum AiState { idle, persuing, attacking, running }
+
+    private AiState currentState;
     [SerializeField] int bestDirectionIndex;
 
     void Start()
@@ -25,11 +35,88 @@ public class AIController : MonoBehaviour
 
         directions = CalculateDirections();
         desirability = new float[16];
+        currentState = AiState.idle;
+        IsAttacking = false;
     }
 
+    void Update()
+    {
+        if (IsAttacking)
+        {
+            Collider2D hitcollider = Physics2D.OverlapCircle(weaponPos.position, 13f, playerLayer);
+
+            if (hitcollider != null)
+            {
+                CharacterHP playerHP = hitcollider.GetComponent<CharacterHP>();
+                if (playerHP != null)
+                {
+                    playerHP.Damage(1, transform.position, 100);
+                }
+            }
+        }
+    }
     void FixedUpdate()
     {
-        if (hp.IsStunned) return;
+        Debug.Log(currentState);
+        if (hp.IsStunned)
+        {
+            currentState = AiState.persuing;
+            return;
+        }
+        if (!(currentState == AiState.idle)) distanceToTarget = Vector3.Distance(transform.position, target.position);
+        if (currentState == AiState.idle)
+        {
+            Collider2D hitCollides = Physics2D.OverlapCircle(transform.position, 85f, playerLayer);
+            if (hitCollides != null)
+            {
+                target = hitCollides.transform;
+                currentState = AiState.persuing;
+            }
+            return;
+        }
+        else if (currentState == AiState.persuing)
+        {
+            anim.SetBool("Attack", false);
+            movementSpeed = persueMovementSpeed;
+            if (distanceToTarget < 55f && distanceToTarget > 45f)
+            {
+                StartCoroutine(AttackInRandonTime());
+            }
+            else if (distanceToTarget < 45) StartCoroutine(AttackInRandonTime());
+            else if (distanceToTarget > 65f) movementSpeed = runMovementSpeed;
+            else
+            {
+                StopAllCoroutines();
+            }
+
+        }
+        else if (currentState == AiState.attacking)
+        {
+            movementSpeed = attackMovementSpeed;
+            if (distanceToTarget < 22)
+            {
+                anim.SetBool("Attack", true);
+                currentState = AiState.running;
+            }
+            if (IsAttacking)
+            {
+                anim.SetBool("Attack", false);
+                currentState = AiState.running;
+            }
+        }
+        else if (currentState == AiState.running)
+        {
+            movementSpeed = runMovementSpeed;
+            anim.SetBool("Attack", false);
+            if (distanceToTarget > 65f)
+            {
+                currentState = AiState.persuing;
+            }
+        }
+
+        Vector3 direction = target.position - transform.position;
+        float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
+        weaponRotator.rotation = Quaternion.Euler(0, 0, angle);
 
         // Calculate desirability for each direction
         desirability = CalculateDesirability(directions);
@@ -41,6 +128,11 @@ public class AIController : MonoBehaviour
         Vector2 moveDirection = directions[bestDirectionIndex];
 
         rb.velocity = moveDirection * movementSpeed;
+    }
+    IEnumerator AttackInRandonTime()
+    {
+        yield return new WaitForSeconds(Random.Range(1, 4));
+        currentState = AiState.attacking;
     }
 
     Vector2[] CalculateDirections()
@@ -54,6 +146,11 @@ public class AIController : MonoBehaviour
         return directions;
     }
 
+    public void SetIsAttacking(bool b)
+    {
+        IsAttacking = b;
+    }
+
     float[] CalculateDesirability(Vector2[] directions)
     {
         Vector2 targetDirection = (target.position - transform.position).normalized;
@@ -64,8 +161,6 @@ public class AIController : MonoBehaviour
 
         for (int i = 0; i < 16; i++)
         {
-            float distanceToTarget = Vector3.Distance(target.position, transform.position);
-
             float dotWithTargetDirection = Vector2.Dot(directions[i], targetDirection);
 
             float sideAvoidance = 1 - Mathf.Abs(dotWithTargetDirection);
@@ -74,7 +169,7 @@ public class AIController : MonoBehaviour
 
             float semiRoundAvoidance = 1 - Mathf.Abs(dotWithTargetDirection - 0.65f);
 
-            float alignmentWithBestDirection = Vector2.Dot(directions[i], directions[bestDirectionIndex]);
+            float alignmentWithCurrentVelocity = Vector2.Dot(directions[i], rb.velocity.normalized);
 
             // Maximum distances for interpolation
             float maxRunDistance = 30f;
@@ -110,15 +205,28 @@ public class AIController : MonoBehaviour
             float bestDirectionAlignmentWeight = .3f;
 
             // Adjust desirability value with the weights
-            float desirabilityValue = targetWeight * dotWithTargetDirection;
+            float desirabilityValue = 0;
 
-            desirabilityValue += sideWeight2 * (sideWeight * sideAvoidance);
+            if (currentState == AiState.persuing)
+            {
+                desirabilityValue = targetWeight * dotWithTargetDirection;
+                desirabilityValue += sideWeight2 * (sideWeight * sideAvoidance);
 
-            desirabilityValue += sideRunWeight2 * (sideRunWeight * sideRunAvoidance);
+                desirabilityValue += sideRunWeight2 * (sideRunWeight * sideRunAvoidance);
 
-            desirabilityValue += semiRoundWeight2 * (semiRoundWeight * semiRoundAvoidance);
+                desirabilityValue += semiRoundWeight2 * (semiRoundWeight * semiRoundAvoidance);
 
-            desirabilityValue += bestDirectionAlignmentWeight * alignmentWithBestDirection;
+                desirabilityValue += bestDirectionAlignmentWeight * alignmentWithCurrentVelocity;
+            }
+            else if (currentState == AiState.attacking)
+            {
+                desirabilityValue = dotWithTargetDirection * 0.6f;
+                desirabilityValue += (1 - Mathf.Abs(dotWithTargetDirection - 0.65f)) * 0.4f;
+            }
+            else if (currentState == AiState.running)
+            {
+                desirabilityValue = -dotWithTargetDirection;
+            }
 
             desirability[i] = desirabilityValue;
 
@@ -133,7 +241,7 @@ public class AIController : MonoBehaviour
         // Combine desirability and undesirability
         for (int i = 0; i < 16; i++)
         {
-            desirability[i] = desirability[i] /2 - undesirability[i];
+            desirability[i] = desirability[i] / 2 - undesirability[i];
         }
 
         // Normalize desirability values

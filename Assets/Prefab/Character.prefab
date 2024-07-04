@@ -146,8 +146,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   characterAnim: {fileID: 853166740680993919}
-  maxHealth: 100
-  hp: 100
+  maxHealth: 3
+  hp: 3
+  isInvulnerable: 0
 --- !u!50 &2306225359217781838
 Rigidbody2D:
   serializedVersion: 4

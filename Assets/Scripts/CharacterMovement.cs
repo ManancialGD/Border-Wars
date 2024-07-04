@@ -6,6 +6,7 @@ using UnityEngine;
 public class CharacterMovement : MonoBehaviour
 {
     GameObject characterSprite;
+    CharacterHP hp;
     [SerializeField] Animator CharacterAnim;
     PlayerInputs playerInputs;
     Rigidbody2D rb;
@@ -20,6 +21,7 @@ public class CharacterMovement : MonoBehaviour
         characterSprite = characterSpriteRenderer.GameObject();
         playerInputs = GetComponent<PlayerInputs>();
         rb = GetComponent<Rigidbody2D>();
+        hp = GetComponent<CharacterHP>();
     }
 
     private void Update()
@@ -38,6 +40,7 @@ public class CharacterMovement : MonoBehaviour
 
     private void FixedUpdate()
     {
+        if (hp.GetIsInvulnerable()) return;
         if (Mathf.Abs(input.x) > 0.001f || Mathf.Abs(input.y) > 0.001f) isMoving = true;
         else isMoving = false;
 

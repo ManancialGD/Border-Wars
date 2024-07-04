@@ -37,4 +37,9 @@ public class SceneManagement : MonoBehaviour
             Instantiate(jailPrefab, randomPlace, Quaternion.identity);
         }
     }
+
+    public void ChangeScene(string sceneName)
+    {
+        SceneManager.LoadScene(sceneName);
+    }
 }

@@ -4,10 +4,10 @@ using UnityEngine;
 
 public class CharacterHP : MonoBehaviour
 {
+    SceneManagement sceneManagement;
     [SerializeField] Animator characterAnim;
-    
     private Rigidbody2D rb;
-    [SerializeField] private int maxHealth = 100;
+    [SerializeField] private int maxHealth = 3;
     [SerializeField] private int hp;
     public int HP
     {
@@ -19,10 +19,11 @@ public class CharacterHP : MonoBehaviour
         }
     }
 
-    private bool isInvulnerable = false;
+    [SerializeField] private bool isInvulnerable = false;
 
     private void Start()
     {
+        sceneManagement = FindObjectOfType<SceneManagement>();  
         rb = GetComponent<Rigidbody2D>();
         hp = maxHealth;
     }
@@ -39,7 +40,7 @@ public class CharacterHP : MonoBehaviour
         HP -= damageAmount;
         
         ApplyKnockback(attackPos, knockbackAmount);
-        StartCoroutine(InvulnerabilityCoroutine(.2f));
+        if (!isInvulnerable) StartCoroutine(InvulnerabilityCoroutine(.4f));
         StartCoroutine(DamageAnimator(.2f));
     }
 
@@ -52,7 +53,7 @@ public class CharacterHP : MonoBehaviour
         if (rb != null)
         {
             Vector3 knockbackVector = (transform.position - attackPos).normalized;
-            rb.velocity += (Vector2)knockbackVector * knockbackAmount;
+            rb.velocity = (Vector2)knockbackVector * knockbackAmount;
         }
     }
 
@@ -70,13 +71,17 @@ public class CharacterHP : MonoBehaviour
     {
         characterAnim.SetBool("Damage", true);
         yield return new WaitForSeconds(changeTime);
-        isInvulnerable = false;
         characterAnim.SetBool("Damage", false);
     }
 
     private void Die()
     {
-        // Handle enemy death logic here
+        sceneManagement.ChangeScene("SampleScene");
         Destroy(gameObject);
+    }
+
+    public bool GetIsInvulnerable()
+    {
+        return isInvulnerable;
     }
 }

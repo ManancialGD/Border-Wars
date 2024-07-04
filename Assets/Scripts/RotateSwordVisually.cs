@@ -37,7 +37,6 @@ public class RotateSwordVisually : MonoBehaviour
         if (angle > 90 || angle < -90)
         {
             transform.rotation = Quaternion.Euler(0, 0, angle);
-            transform.rotation = Quaternion.Euler(0, 180, transform.rotation.eulerAngles.z);
         }
         else
         {

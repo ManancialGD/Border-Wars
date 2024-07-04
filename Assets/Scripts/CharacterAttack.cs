@@ -1,7 +1,4 @@
 using System.Collections;
-using System.Collections.Generic;
-using NaughtyAttributes.Editor;
-using UnityEditor;
 using UnityEngine;
 
 public class CharacterAttack : MonoBehaviour
@@ -93,7 +90,7 @@ public class CharacterAttack : MonoBehaviour
     /// </summary>
     private void CheckForHit()
     {
-        Collider2D[] hittenObjects = Physics2D.OverlapCircleAll(weaponPos.position, 8f);
+        Collider2D[] hittenObjects = Physics2D.OverlapCircleAll(weaponPos.position, 13f);
 
         foreach (Collider2D hittenObject in hittenObjects)
         {
