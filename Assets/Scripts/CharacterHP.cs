@@ -76,7 +76,7 @@ public class CharacterHP : MonoBehaviour
 
     private void Die()
     {
-        sceneManagement.ChangeScene("SampleScene");
+        sceneManagement.ChangeScene("GameOver");
         Destroy(gameObject);
     }
 

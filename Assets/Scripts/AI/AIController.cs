@@ -57,7 +57,6 @@ public class AIController : MonoBehaviour
     }
     void FixedUpdate()
     {
-        Debug.Log(currentState);
         if (hp.IsStunned)
         {
             currentState = AiState.persuing;
@@ -67,10 +66,15 @@ public class AIController : MonoBehaviour
         if (currentState == AiState.idle)
         {
             Collider2D hitCollides = Physics2D.OverlapCircle(transform.position, 85f, playerLayer);
+
             if (hitCollides != null)
             {
-                target = hitCollides.transform;
-                currentState = AiState.persuing;
+                CharacterMovement characterMovement = hitCollides.GetComponent<CharacterMovement>();
+                if (characterMovement != null)
+                {
+                    target = hitCollides.transform;
+                    currentState = AiState.persuing;
+                }
             }
             return;
         }

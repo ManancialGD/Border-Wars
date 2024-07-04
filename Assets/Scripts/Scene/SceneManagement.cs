@@ -6,10 +6,10 @@ using UnityEngine.SceneManagement;
 
 public class SceneManagement : MonoBehaviour
 {
+    [SerializeField] GameObject text;
     CameraFollow cameraFollow;
-
     string currentScene;
-
+    bool start;
     [SerializeField] Transform[] jailSpawnPoints;
     [SerializeField] GameObject jailPrefab;
 
@@ -20,6 +20,7 @@ public class SceneManagement : MonoBehaviour
     /// </summary>
     void Start()
     {
+        start = false;
         cameraFollow = Camera.main.GetComponent<CameraFollow>();
         if (cameraFollow != null)
         {
@@ -33,11 +34,33 @@ public class SceneManagement : MonoBehaviour
         {
             int randomIndex = Random.Range(0, jailSpawnPoints.Length);
             Vector3 randomPlace = jailSpawnPoints[randomIndex].position;
-            
+
             Instantiate(jailPrefab, randomPlace, Quaternion.identity);
+            Time.timeScale = 0;
+            text.SetActive(true);
+            start = true;
+        }
+        else if (currentScene == "OpeningScene")
+        {
+            StartCoroutine(ChangeSceneAfterCutScene());
         }
     }
 
+    private void Update()
+    {
+        if (!start) return;
+        if (Input.GetButtonDown("Attack"))
+        {
+            Time.timeScale = 1;
+            text.SetActive(false);
+        }
+    }
+
+    IEnumerator ChangeSceneAfterCutScene()
+    {
+        yield return new WaitForSeconds(8);
+        ChangeScene("Forest");
+    }
     public void ChangeScene(string sceneName)
     {
         SceneManager.LoadScene(sceneName);

@@ -1,5 +1,6 @@
 using System.Collections;
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 public class CharacterAttack : MonoBehaviour
 {
@@ -17,9 +18,14 @@ public class CharacterAttack : MonoBehaviour
 
     private void Update()
     {
+        // Verifica se o ponteiro está sobre um elemento da UI
+        if (EventSystem.current.IsPointerOverGameObject())
+        {
+            return;
+        }
+
         if (Input.GetButtonDown("Attack") && ((!IsAttacking && !inCooldown) || canSecondAttack))
         {
-
             if (canSecondAttack)
             {
                 canSecondAttack = false;
@@ -72,6 +78,7 @@ public class CharacterAttack : MonoBehaviour
         yield return new WaitForSeconds(0.2f);
         canSecondAttack = false;
     }
+    
     /// <summary>
     /// This will rotate the weapon to face the mouse cursor position.
     /// It calculates the direction from the character to the mouse position and rotates the weapon accordingly.
