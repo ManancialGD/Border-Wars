@@ -1,9 +1,10 @@
 using System.Collections;
-using System.Collections.Generic;
+using System;
 using UnityEngine;
 
 public class EnemyHealth : MonoBehaviour
 {
+    AudioManager audioManager;
     private Rigidbody2D rb;
     [SerializeField] private int maxHealth = 100;
     [SerializeField] private int hp;
@@ -17,12 +18,13 @@ public class EnemyHealth : MonoBehaviour
             if (hp <= 0) Die();
         }
     }
-
+    public event Action<GameObject> OnEnemyDied;
 
     private void Start()
     {
         rb = GetComponent<Rigidbody2D>();
         hp = maxHealth;
+        audioManager = FindObjectOfType<AudioManager>();
     }
 
     /// <summary>
@@ -35,7 +37,7 @@ public class EnemyHealth : MonoBehaviour
         if (IsStunned) return;
 
         HP -= damageAmount;
-
+        audioManager.PlayEnemyDamageSound();
         ApplyKnockback(attackPos, knockbackAmount);
 
         StartCoroutine(InvulnerabilityCoroutine(.4f));
@@ -67,7 +69,7 @@ public class EnemyHealth : MonoBehaviour
 
     private void Die()
     {
-        // Handle enemy death logic here
+        OnEnemyDied?.Invoke(gameObject);
         Destroy(gameObject);
     }
 }

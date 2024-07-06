@@ -5,6 +5,7 @@ using UnityEngine;
 
 public class CharacterMovement : MonoBehaviour
 {
+    AudioManager audioManager;
     GameObject characterSprite;
     CharacterHP hp;
     [SerializeField] Animator CharacterAnim;
@@ -14,6 +15,7 @@ public class CharacterMovement : MonoBehaviour
     [SerializeField] private bool isMoving;
     private Vector2 input;
     float lastInputY;
+    private bool alreadyPlayingStep;
 
     private void Start()
     {
@@ -22,6 +24,7 @@ public class CharacterMovement : MonoBehaviour
         playerInputs = GetComponent<PlayerInputs>();
         rb = GetComponent<Rigidbody2D>();
         hp = GetComponent<CharacterHP>();
+        audioManager = FindObjectOfType<AudioManager>();
     }
 
     private void Update()
@@ -36,8 +39,24 @@ public class CharacterMovement : MonoBehaviour
         else if (lastInputY == 0 && input.x != 0) CharacterAnim.SetFloat("Y", -1);
 
         lastInputY = input.y;
-    }
 
+        if (!alreadyPlayingStep)
+        {
+            if (isMoving)
+            {
+                StartCoroutine(PlayStepSound(.4f));
+                audioManager.PlayPlayerStepsSound();
+            }
+        }
+    }
+    private IEnumerator PlayStepSound(float time)
+    {
+        alreadyPlayingStep = true;
+
+        yield return new WaitForSeconds(time);
+
+        alreadyPlayingStep = false;
+    }
     private void FixedUpdate()
     {
         if (hp.GetIsInvulnerable()) return;

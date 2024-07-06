@@ -4,19 +4,11 @@ using UnityEngine;
 
 public class PlayerInputs : MonoBehaviour
 {
-    Mobile mobile;
-    private bool isMobile;
     private Vector2 input;
     private Vector2 lastInput = new Vector2 (0, 0);
 
-    void Start()
-    {
-        mobile = FindObjectOfType<Mobile>();
-        isMobile = mobile.GetIsMobile();
-    }
     void Update()
     {
-        if (isMobile) return;
         InputUpdate();
     }
 
@@ -60,10 +52,5 @@ public class PlayerInputs : MonoBehaviour
     public Vector2 GetPlayerInput()
     {
         return input;
-    }
-
-    public void SetPlayerInput(Vector2 v)
-    {
-        input = v;
     }
 }

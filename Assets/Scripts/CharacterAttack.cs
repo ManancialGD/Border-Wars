@@ -4,6 +4,7 @@ using UnityEngine.EventSystems;
 
 public class CharacterAttack : MonoBehaviour
 {
+    AudioManager audioManager;
     [SerializeField] private GameObject weaponRotatorGO;
     [SerializeField] private int attackPower = 20;
     [SerializeField] private Transform weaponPos;
@@ -15,6 +16,11 @@ public class CharacterAttack : MonoBehaviour
     private bool wasAttacking;
     private bool SecondAttacked;
     [SerializeField] private bool canSecondAttack;
+
+    private void Start()
+    {
+        audioManager = FindObjectOfType<AudioManager>();
+    }
 
     private void Update()
     {
@@ -38,6 +44,7 @@ public class CharacterAttack : MonoBehaviour
                 weaponAnim.SetBool("Attack", true);
                 StartCoroutine(WindowToSecondAttack());
             }
+            audioManager.PlaySwordSwooshSound();
         }
         else if (!IsAttacking)
         {
@@ -78,7 +85,7 @@ public class CharacterAttack : MonoBehaviour
         yield return new WaitForSeconds(0.2f);
         canSecondAttack = false;
     }
-    
+
     /// <summary>
     /// This will rotate the weapon to face the mouse cursor position.
     /// It calculates the direction from the character to the mouse position and rotates the weapon accordingly.
