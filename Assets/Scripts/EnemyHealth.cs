@@ -4,6 +4,7 @@ using UnityEngine;
 
 public class EnemyHealth : MonoBehaviour
 {
+    Animator anim;
     EnemyAudioManager audioManager;
     private Rigidbody2D rb;
     [SerializeField] private int maxHealth = 100;
@@ -24,7 +25,8 @@ public class EnemyHealth : MonoBehaviour
     {
         rb = GetComponent<Rigidbody2D>();
         hp = maxHealth;
-        audioManager = FindObjectOfType<EnemyAudioManager>();
+        audioManager = GetComponentInChildren<EnemyAudioManager>();
+        anim = GetComponent<Animator>();
     }
 
     /// <summary>
@@ -38,6 +40,7 @@ public class EnemyHealth : MonoBehaviour
 
         HP -= damageAmount;
         audioManager.PlayEnemyDamageSound();
+        anim.SetBool("Damage", true);
         ApplyKnockback(attackPos, knockbackAmount);
 
         StartCoroutine(InvulnerabilityCoroutine(.5f));
@@ -65,6 +68,7 @@ public class EnemyHealth : MonoBehaviour
         IsStunned = true;
         yield return new WaitForSeconds(invulnerabilityTime);
         IsStunned = false;
+        anim.SetBool("Damage", false);
     }
 
     private void Die()

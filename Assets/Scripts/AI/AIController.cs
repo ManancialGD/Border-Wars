@@ -25,7 +25,7 @@ public class AIController : MonoBehaviour
 
     public enum AiState { idle, persuing, attacking, running }
 
-    private AiState currentState;
+    public AiState currentState;
     [SerializeField] int bestDirectionIndex;
 
     EnemyAudioManager audioManager;

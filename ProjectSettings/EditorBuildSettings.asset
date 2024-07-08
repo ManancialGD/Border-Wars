@@ -6,6 +6,9 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
+    path: Assets/Scenes/Lusofona.unity
+    guid: 86b6f5c7740690043a88ad984a969616
+  - enabled: 1
     path: Assets/Scenes/MainMenu.unity
     guid: 6bae215fecfe57f40901f73ef62587ca
   - enabled: 1
