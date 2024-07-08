@@ -9,7 +9,6 @@ public class SceneManagement : MonoBehaviour
     [SerializeField] GameObject text;
     CameraFollow cameraFollow;
     string currentScene;
-    bool start;
     [SerializeField] Transform[] jailSpawnPoints;
     [SerializeField] GameObject jailPrefab;
 
@@ -20,7 +19,6 @@ public class SceneManagement : MonoBehaviour
     /// </summary>
     void Start()
     {
-        start = false;
         cameraFollow = Camera.main.GetComponent<CameraFollow>();
         if (cameraFollow != null)
         {
@@ -36,9 +34,6 @@ public class SceneManagement : MonoBehaviour
             Vector3 randomPlace = jailSpawnPoints[randomIndex].position;
 
             Instantiate(jailPrefab, randomPlace, Quaternion.identity);
-            Time.timeScale = 0;
-            text.SetActive(true);
-            start = true;
         }
         else if (currentScene == "OpeningScene")
         {
@@ -46,19 +41,9 @@ public class SceneManagement : MonoBehaviour
         }
     }
 
-    private void Update()
-    {
-        if (!start) return;
-        if (Input.GetButtonDown("Attack"))
-        {
-            Time.timeScale = 1;
-            text.SetActive(false);
-        }
-    }
-
     IEnumerator ChangeSceneAfterCutScene()
     {
-        yield return new WaitForSeconds(8);
+        yield return new WaitForSeconds(14);
         ChangeScene("Forest");
     }
     public void ChangeScene(string sceneName)

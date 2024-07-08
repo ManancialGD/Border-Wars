@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class EnemyHealth : MonoBehaviour
 {
-    AudioManager audioManager;
+    EnemyAudioManager audioManager;
     private Rigidbody2D rb;
     [SerializeField] private int maxHealth = 100;
     [SerializeField] private int hp;
@@ -24,7 +24,7 @@ public class EnemyHealth : MonoBehaviour
     {
         rb = GetComponent<Rigidbody2D>();
         hp = maxHealth;
-        audioManager = FindObjectOfType<AudioManager>();
+        audioManager = FindObjectOfType<EnemyAudioManager>();
     }
 
     /// <summary>
@@ -40,7 +40,7 @@ public class EnemyHealth : MonoBehaviour
         audioManager.PlayEnemyDamageSound();
         ApplyKnockback(attackPos, knockbackAmount);
 
-        StartCoroutine(InvulnerabilityCoroutine(.4f));
+        StartCoroutine(InvulnerabilityCoroutine(.5f));
     }
 
     /// <summary>

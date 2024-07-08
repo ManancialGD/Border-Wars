@@ -4,7 +4,7 @@ using UnityEngine.EventSystems;
 
 public class CharacterAttack : MonoBehaviour
 {
-    AudioManager audioManager;
+    PlayerAudioManager audioManager;
     [SerializeField] private GameObject weaponRotatorGO;
     [SerializeField] private int attackPower = 20;
     [SerializeField] private Transform weaponPos;
@@ -19,12 +19,12 @@ public class CharacterAttack : MonoBehaviour
 
     private void Start()
     {
-        audioManager = FindObjectOfType<AudioManager>();
+        audioManager = FindObjectOfType<PlayerAudioManager>();
     }
 
     private void Update()
     {
-        // Verifica se o ponteiro está sobre um elemento da UI
+        // // Verifica se o ponteiro está sobre um elemento da UI
         if (EventSystem.current.IsPointerOverGameObject())
         {
             return;

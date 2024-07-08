@@ -28,8 +28,12 @@ public class AIController : MonoBehaviour
     private AiState currentState;
     [SerializeField] int bestDirectionIndex;
 
+    EnemyAudioManager audioManager;
+    private bool alreadyPlayingStep;
+
     void Start()
     {
+        audioManager = GetComponentInChildren<EnemyAudioManager>();
         rb = GetComponent<Rigidbody2D>();
         hp = GetComponent<EnemyHealth>();
 
@@ -37,6 +41,7 @@ public class AIController : MonoBehaviour
         desirability = new float[16];
         currentState = AiState.idle;
         IsAttacking = false;
+        alreadyPlayingStep = false; // Initialize alreadyPlayingStep to false
     }
 
     void Update()
@@ -54,7 +59,36 @@ public class AIController : MonoBehaviour
                 }
             }
         }
+
+        if (currentState != AiState.idle && !alreadyPlayingStep && !hp.IsStunned)
+        {
+            StartCoroutine(PlayStepSound());
+        }
     }
+
+    private IEnumerator PlayStepSound()
+    {
+        alreadyPlayingStep = true;
+        Debug.Log("PlayStepSound Coroutine Started");
+
+        while (currentState != AiState.idle && !hp.IsStunned)
+        {
+            audioManager.PlayEnemyStepsSound();
+
+            float stepInterval = movementSpeed == persueMovementSpeed ? 0.4f :
+                                 movementSpeed == runMovementSpeed ? 0.3f :
+                                 movementSpeed == attackMovementSpeed ? 0.2f : 0.4f;
+
+            Debug.Log(stepInterval);
+            yield return new WaitForSeconds(stepInterval);
+
+            Debug.Log("Step sound played");
+        }
+
+        alreadyPlayingStep = false;
+        Debug.Log("____out___");
+    }
+
     void FixedUpdate()
     {
         if (hp.IsStunned)
@@ -90,9 +124,8 @@ public class AIController : MonoBehaviour
             else if (distanceToTarget > 65f) movementSpeed = runMovementSpeed;
             else
             {
-                StopAllCoroutines();
+                // Do not stop all coroutines here as it stops the PlayStepSound coroutine
             }
-
         }
         else if (currentState == AiState.attacking)
         {
@@ -122,17 +155,13 @@ public class AIController : MonoBehaviour
         float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
         weaponRotator.rotation = Quaternion.Euler(0, 0, angle);
 
-        // Calculate desirability for each direction
         desirability = CalculateDesirability(directions);
-
-        // Find the direction with the highest adjusted desirability
         bestDirectionIndex = GetBestDirectionIndex(desirability);
 
-        // Move towards the best direction
         Vector2 moveDirection = directions[bestDirectionIndex];
-
         rb.velocity = moveDirection * movementSpeed;
     }
+
     IEnumerator AttackInRandonTime()
     {
         yield return new WaitForSeconds(Random.Range(1, 4));
@@ -175,14 +204,12 @@ public class AIController : MonoBehaviour
 
             float alignmentWithCurrentVelocity = Vector2.Dot(directions[i], rb.velocity.normalized);
 
-            // Maximum distances for interpolation
             float maxRunDistance = 30f;
             float maxSideRunDistance = 40f;
             float maxRoundDistance = 50f;
             float maxSemiRoundDistance = 60f;
             float maxOverallDistance = 70f;
 
-            // Calculate interpolation proportion for distances
             float sideAvoidanceProportion = Mathf.InverseLerp(maxSemiRoundDistance, maxRoundDistance, distanceToTarget);
             float sideAvoidanceProportion2 = Mathf.InverseLerp(maxRoundDistance, maxRunDistance, distanceToTarget);
 
@@ -194,7 +221,6 @@ public class AIController : MonoBehaviour
             float semiRoundAvoidanceProportion = Mathf.InverseLerp(maxOverallDistance, maxSemiRoundDistance, distanceToTarget);
             float semiRoundAvoidanceProportion2 = Mathf.InverseLerp(maxSemiRoundDistance, maxRoundDistance, distanceToTarget);
 
-            // Weights for each component
             float targetWeight = Mathf.Lerp(1f, 0f, targetProximityProportion);
 
             float sideWeight = Mathf.Lerp(0f, 1f, sideAvoidanceProportion);
@@ -208,7 +234,6 @@ public class AIController : MonoBehaviour
 
             float bestDirectionAlignmentWeight = .3f;
 
-            // Adjust desirability value with the weights
             float desirabilityValue = 0;
 
             if (currentState == AiState.persuing)
@@ -234,21 +259,17 @@ public class AIController : MonoBehaviour
 
             desirability[i] = desirabilityValue;
 
-            // Update min and max desirability values
             if (desirabilityValue < minDesirability) minDesirability = desirabilityValue;
             if (desirabilityValue > maxDesirability) maxDesirability = desirabilityValue;
         }
 
-        // Calculate obstacle avoidance
         undesirability = CalculateUndesirability(directions);
 
-        // Combine desirability and undesirability
         for (int i = 0; i < 16; i++)
         {
             desirability[i] = desirability[i] / 2 - undesirability[i];
         }
 
-        // Normalize desirability values
         for (int i = 0; i < 16; i++)
         {
             desirability[i] = (desirability[i] - minDesirability) / (maxDesirability - minDesirability);
@@ -275,11 +296,8 @@ public class AIController : MonoBehaviour
                         Vector2 obstacleDirection = (hit.point - (Vector2)transform.position).normalized;
                         float dotWithObstacle = Vector2.Dot(directions[j], obstacleDirection);
 
-                        // Shape that reduces desirability if direction is aligned with an obstacle
-                        // float avoidanceShape = 1 - Mathf.Abs(dotWithObstacle - 0.65f);
                         float avoidanceShape = dotWithObstacle;
 
-                        // The closer the obstacle, the higher the undesirability
                         float distanceFactor = Mathf.Lerp(1f, 0f, distance / 40f);
 
                         undesirability[j] += distanceFactor * avoidanceShape;
@@ -308,24 +326,15 @@ public class AIController : MonoBehaviour
 
     void OnDrawGizmos()
     {
-        // Ensure we have a target
         if (target == null) return;
-
-        // Ensure directions and desirability are initialized
         if (directions == null || desirability == null) return;
-
-        // Ensure directions and desirability are of correct length
         if (directions.Length != 16 || desirability.Length != 16) return;
 
-        // Draw the desirability lines
         for (int i = 0; i < 16; i++)
         {
-            // Scale the length of the line based on desirability
             float scaledLength = directionLength * desirability[i];
-
             Vector2 directionEnd = (Vector2)transform.position + directions[i] * scaledLength;
 
-            // Draw the line
             if (i == bestDirectionIndex) Gizmos.color = Color.blue;
             else Gizmos.color = Color.green;
             Gizmos.DrawLine(transform.position, directionEnd);

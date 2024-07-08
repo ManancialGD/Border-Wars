@@ -4,6 +4,7 @@ using UnityEngine;
 
 public class CharacterHP : MonoBehaviour
 {
+    PlayerAudioManager audioManager;
     SceneManagement sceneManagement;
     [SerializeField] Animator characterAnim;
     private Rigidbody2D rb;
@@ -23,6 +24,7 @@ public class CharacterHP : MonoBehaviour
 
     private void Start()
     {
+        audioManager = FindObjectOfType<PlayerAudioManager>();
         sceneManagement = FindObjectOfType<SceneManagement>();  
         rb = GetComponent<Rigidbody2D>();
         hp = maxHealth;
@@ -38,6 +40,8 @@ public class CharacterHP : MonoBehaviour
         if (isInvulnerable) return;
 
         HP -= damageAmount;
+
+        audioManager.PlayPlayerDamageSound();
         
         ApplyKnockback(attackPos, knockbackAmount);
         if (!isInvulnerable) StartCoroutine(InvulnerabilityCoroutine(.4f));
